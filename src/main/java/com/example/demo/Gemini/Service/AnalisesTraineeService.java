@@ -89,7 +89,7 @@ public class AnalisesTraineeService {
     public List<AnalisesTraineeDTO> getAllAnalises() {
         return analisesTraineeRepository.findAll()
                 .stream()
-                .map(AnalisesTraineeDTO::new) // 👈 Transforma cada GeminiAnalytics em AnalisesTraineeDTO
+                .map(AnalisesTraineeDTO::new)
                 .toList();
     }
 }

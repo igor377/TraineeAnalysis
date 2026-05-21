@@ -10,10 +10,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 public class DemoApplication {
 
     public static void main(String[] args) {
-        // Carrega o arquivo .env da raiz do projeto
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
-        // Injeta as variáveis do .env diretamente nas propriedades do sistema Java
         dotenv.entries().forEach(entry ->
                 System.setProperty(entry.getKey(), entry.getValue())
         );
