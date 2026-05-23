@@ -13,5 +13,5 @@ import java.util.UUID;
 public interface AnalyticsRepository extends JpaRepository<Analytics, UUID> {
     Optional<Analytics>findByEmail(String email);
     Optional<Analytics>findByRegistration(String registration);
-    Page<Analytics> findByStatusIn(List<String> statusLista, Pageable pageable);
+    Page<Analytics> findByStatusIn(List<StatusEnum> statusLista, Pageable pageable);
 }
