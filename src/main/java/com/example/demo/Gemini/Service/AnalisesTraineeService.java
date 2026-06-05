@@ -1,6 +1,7 @@
 package com.example.demo.Gemini.Service;
 
 import com.example.demo.Analytics.Domain.Entity.Analytics;
+import com.example.demo.Analytics.Domain.Enum.Classification;
 import com.example.demo.Analytics.Domain.Enum.StatusEnum;
 import com.example.demo.Analytics.Repository.AnalyticsRepository;
 import com.example.demo.Gemini.Domain.DTO.AnalisesTraineeDTO;
@@ -10,8 +11,9 @@ import com.example.demo.Gemini.Domain.Entity.ProcessAnalytics;
 import com.example.demo.Gemini.Domain.Enum.JobStatusEnum;
 import com.example.demo.Gemini.Repository.AnalisesTraineeRepository;
 import com.example.demo.Gemini.Repository.ProcessAnalyticsRepository;
+import com.example.demo.RH.Domain.DTO.RHConfigResponseDTO;
+import com.example.demo.RH.Service.RHService;
 import com.example.demo.exceptions.NotFoundException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -22,7 +24,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -42,8 +43,14 @@ public class AnalisesTraineeService {
     @Autowired
     private ProcessAnalyticsRepository processAnalyticsRepository;
 
+    @Autowired
+    private RHService rhService;
+
     @Async
-    public void processPrompts() {
+    public void processPrompts(String semestre) {
+        RHConfigResponseDTO rh = rhService.getByDate(semestre);
+        String perfilBuscado = (rh != null) ? rh.type() : "Buscamos trainees com perfil geral para desenvolvimento na Empresa Júnior.";
+
         List<StatusEnum> statusList = List.of(StatusEnum.REPROVADO);
 
         int paginaAtual = 0;
@@ -65,16 +72,38 @@ public class AnalisesTraineeService {
                 promptBuilder.append("Instrução OBRIGATÓRIA de formato: Gere a resposta em formato de TEXTO PURO e contínuo. ")
                         .append("NÃO use negritos (**), NÃO use itálicos (*), NÃO use listas ou bullet points (- ou *) e NÃO use aspas duplas no meio do texto. ")
                         .append("Escreva no máximo 3 parágrafos simples e diretos, separados apenas por uma quebra de linha normal.\n\n");
-                promptBuilder.append("Analise as caracteristicas do Trainee e forneça um feedback sobre o perfil do trainee, levando em consideração os seguintes dados: ")
-                        .append("Perfil do Trainee: ")
-                        .append("Nome: ").append(data.getName()).append(", ")
-                        .append("Email: ").append(data.getEmail()).append(", ")
-                        .append("Registro: ").append(data.getRegistration()).append(", ")
-                        .append("Data de Nascimento: ").append(data.getBirthDate()).append(", ")
-                        .append("Formação Acadêmica: ").append(data.getMajor()).append(", ")
-                        .append("Gênero: ").append(data.getGender()).append(", ")
-                        .append("Departamento: ").append(data.getDepartament()).append(", ")
-                        .append("Expectativas: ").append(data.getExpectations());
+
+                promptBuilder.append("Analise as caracteristicas do Trainee e forneça um feedback sobre o perfil do trainee, levando em consideração os dados abaixo:\n\n")
+                        .append("Tipo que estamos buscando:\n")
+                        .append(perfilBuscado).append("\n\n")
+
+                        .append("Perfil do Trainee:\n")
+                        .append("- Nome: ").append(data.getName()).append("\n")
+                        .append("- Email: ").append(data.getEmail()).append("\n")
+                        .append("- Registro: ").append(data.getRegistration()).append("\n")
+                        .append("- Data de Nascimento: ").append(data.getBirthDate()).append("\n")
+                        .append("- Formação Acadêmica: ").append(data.getMajor()).append("\n")
+                        .append("- Gênero: ").append(data.getGender()).append("\n")
+                        .append("- Departamento: ").append(data.getDepartament()).append("\n\n")
+
+                        .append("Desempenho na Dinâmica Presencial:\n")
+                        .append("- Trabalho em Equipe: ").append(data.getTeamwork() != null ? Classification.fromValue(data.getTeamwork()).getDescription() : "Não avaliado").append("\n")
+                        .append("- Resolução de Problemas: ").append(data.getProblemSolving() != null ? Classification.fromValue(data.getProblemSolving()).getDescription() : "Não avaliado").append("\n")
+                        .append("- Observações da Dinâmica: ").append(data.getGroupDynamicObservations()).append("\n\n")
+
+                        .append("Desempenho na Entrevista Individual:\n")
+                        .append("- Fit Cultural: ").append(data.getCulturalFit() != null ? Classification.fromValue(data.getCulturalFit()).getDescription() : "Não avaliado").append("\n")
+                        .append("- Comunicação: ").append(data.getCommunicationSkills() != null ? Classification.fromValue(data.getCommunicationSkills()).getDescription() : "Não avaliado").append("\n")
+                        .append("- Motivação e Histórico: ").append(data.getHistoryMotivation()).append("\n\n")
+
+                        .append("Feedback do Trainee:\n")
+                        .append("- Nível de Satisfação: ").append(data.getSatisfactionLevel() != null ? Classification.fromValue(data.getSatisfactionLevel()).getDescription() : "Não preenchido").append("\n")
+                        .append("- Dificuldade Percebida: ").append(data.getPerceivedDifficulty() != null ? Classification.fromValue(data.getPerceivedDifficulty()).getDescription() : "Não preenchido").append("\n")
+                        .append("- Comentários do Candidato: ").append(data.getCandidateComments()).append("\n\n")
+
+                        .append("Avaliação Final:\n")
+                        .append("- Status: ").append(data.getStatus()).append("\n")
+                        .append("- Observações Finais: ").append(data.getFinalObservations());
 
                 try {
                     String feedback = geminiService.pedirResposta(promptBuilder.toString());
@@ -112,8 +141,7 @@ public class AnalisesTraineeService {
         newJob.setJobStatus(JobStatusEnum.IN_PROGRESS);
         newJob.setAnalysis("Analise em processamento");
         ProcessAnalytics saveJob = processAnalyticsRepository.save(newJob);
-        executeJob(newJob.getId());
-        return new ProcessAnalyticsDTO(newJob);
+        return new ProcessAnalyticsDTO(saveJob);
     }
 
     @Async

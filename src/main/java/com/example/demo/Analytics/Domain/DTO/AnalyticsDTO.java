@@ -30,10 +30,7 @@ public record AnalyticsDTO(
         @NotNull
         Departament departament,
 
-        @NotBlank
-        String expectations,
-
         @NotNull
-        StatusEnum situation
+        String semester
 ) {
 }

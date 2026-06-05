@@ -7,12 +7,10 @@ import com.example.demo.Gemini.Domain.Entity.ProcessAnalytics;
 import com.example.demo.Gemini.Service.AnalisesTraineeService;
 import jakarta.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,23 +23,26 @@ public class AnalisesTraineeController {
     private AnalisesTraineeService analisesTraineeService;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<List<AnalisesTraineeDTO>> getAllAnalises() {
         List<AnalisesTraineeDTO> analises = analisesTraineeService.getAllAnalises();
         return ResponseEntity.ok(analises);
     }
 
-    @GetMapping("/processar")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
-    public ResponseEntity<String> processPrompts() {
-        analisesTraineeService.processPrompts();
-        return ResponseEntity.accepted().body("Processamento de prompts iniciado em segundo plano.");
+    @PostMapping("/processar/{semestre}")
+    public ResponseEntity<ProcessAnalyticsDTO> processAllTrainees(@PathVariable String semestre) {
+        analisesTraineeService.processPrompts(semestre);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     @GetMapping("/processar/analise")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<ProcessAnalyticsDTO> createJob() {
-        ProcessAnalyticsDTO processAnalytics = analisesTraineeService.newJob();
-        return ResponseEntity.ok(processAnalytics);
+        ProcessAnalyticsDTO jobDto = analisesTraineeService.newJob();
+
+        analisesTraineeService.executeJob(jobDto.id());
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(jobDto);
     }
 
     @GetMapping("/analises/{id}")

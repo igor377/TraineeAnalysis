@@ -1,5 +1,6 @@
 package com.example.demo.Analytics.Domain.Entity;
 
+import com.example.demo.Analytics.Domain.Enum.Classification;
 import com.example.demo.Analytics.Domain.Enum.Departament;
 import com.example.demo.Analytics.Domain.Enum.GenderEnum;
 import com.example.demo.Analytics.Domain.Enum.StatusEnum;
@@ -52,9 +53,36 @@ public class Analytics {
     private Departament departament;
 
     @Column(nullable = false)
-    private String expectations;
+    private String semester;
+
+    // Group Dynamic
+
+    private Integer teamwork;
+
+    private Integer problemSolving;
+
+    private String groupDynamicObservations;
+
+    // Individual Interview
+
+    private Integer culturalFit;
+
+    private Integer communicationSkills;
+
+    private String historyMotivation;
+
+    // Trainee Feedback
+
+    private Integer satisfactionLevel;
+
+    private Integer perceivedDifficulty;
+
+    private String candidateComments;
+
+    // Final Classification
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private StatusEnum status;
+
+    private String finalObservations;
 }

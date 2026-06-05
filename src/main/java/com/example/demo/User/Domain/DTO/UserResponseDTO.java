@@ -10,6 +10,12 @@ public record UserResponseDTO(
         String name
 ) {
 
+    public UserResponseDTO(UUID id, String email, String name) {
+        this.id = id;
+        this.email = email;
+        this.name = name;
+    }
+
     public UserResponseDTO(User user) {
         this(user.getId(), user.getEmail(), user.getName());
     }
