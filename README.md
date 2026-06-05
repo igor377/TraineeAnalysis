@@ -56,7 +56,3 @@ O projeto possui um planejamento focado em engenharia de dados e inteligência a
    mvn spring-boot:run
 
    A API estará disponível em http://localhost:8080.
-
-## 🤝 Contato
-
-Igor Reis Santos - [LinkedIn](https://www.linkedin.com/in/igor-reis-santos/)
